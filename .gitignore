@@ -1,0 +1,9 @@
+# Entorno Virtual
+venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Base de datos de prueba de SQLite
+db.sqlite3

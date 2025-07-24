@@ -1,0 +1,16 @@
+{% extends "pos/base.html" %}
+{% load static %}
+
+{% block content %}
+    {% csrf_token %}
+    <div class="top-bar">
+        ...
+    </div>
+    <div class="main-container">
+        ...
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

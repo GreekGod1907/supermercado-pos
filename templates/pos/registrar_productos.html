@@ -1,0 +1,132 @@
+{% extends "pos/pos.html" %}
+
+{% block content %}
+<div class="batch-container">
+    <form id="batch-form">
+        <input type="text" id="batch-barcode" placeholder="Escanear Código">
+        <input type="text" id="batch-name" placeholder="Nombre">
+        <input type="number" id="batch-quantity" placeholder="Cantidad">
+        <input type="number" id="batch-price" placeholder="Precio" step="0.01">
+        <button type="submit">Añadir a la Lista</button>
+    </form>
+    <hr>
+    <h2>Lote por Guardar</h2>
+    <table id="batch-table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="batch-items"></tbody>
+    </table>
+    <button id="save-batch-btn" class="finalize-button">Guardar Lote en Inventario</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lógica para la página de registro de lotes
+    const batchForm = document.getElementById('batch-form');
+    const barcodeInput = document.getElementById('batch-barcode');
+    const nameInput = document.getElementById('batch-name');
+    const quantityInput = document.getElementById('batch-quantity');
+    const priceInput = document.getElementById('batch-price');
+    const batchItemsContainer = document.getElementById('batch-items');
+    const saveBatchBtn = document.getElementById('save-batch-btn');
+
+    let loteActual = [];
+
+    // Autocompletar al escanear
+    barcodeInput.addEventListener('change', async function() {
+        const codigo = barcodeInput.value;
+        if (!codigo) return;
+        try {
+            const response = await fetch(`/pos/api/buscar-producto/?codigo_barra=${codigo}`);
+            if (response.ok) {
+                const producto = await response.json();
+                nameInput.value = producto.nombre;
+                priceInput.value = parseFloat(producto.precio);
+                quantityInput.focus();
+            } else {
+                nameInput.focus();
+            }
+        } catch (error) {
+            console.error('Error buscando producto');
+        }
+    });
+
+    // Añadir item a la lista
+    batchForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const item = {
+            codigo_barra: barcodeInput.value,
+            nombre: nameInput.value,
+            cantidad: quantityInput.value,
+            precio: priceInput.value,
+        };
+        if (!item.codigo_barra || !item.nombre || !item.cantidad || !item.precio) {
+            alert('Todos los campos son obligatorios.');
+            return;
+        }
+        loteActual.push(item);
+        actualizarVistaLote();
+        batchForm.reset();
+        barcodeInput.focus();
+    });
+
+    // Guardar lote completo
+    saveBatchBtn.addEventListener('click', async function() {
+        if (loteActual.length === 0) {
+            alert('No hay productos en la lista para guardar.');
+            return;
+        }
+        try {
+            const response = await fetch('/pos/api/registrar-lote/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loteActual)
+            });
+            if (response.ok) {
+                const result = await response.json();
+                alert(`${result.productos_procesados} productos guardados con éxito.`);
+                loteActual = [];
+                actualizarVistaLote();
+            } else {
+                alert('Error al guardar el lote.');
+            }
+        } catch (error) {
+            alert('Error de conexión.');
+        }
+    });
+
+    function actualizarVistaLote() {
+        batchItemsContainer.innerHTML = '';
+        loteActual.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.codigo_barra}</td>
+                <td>${item.nombre}</td>
+                <td>${item.cantidad}</td>
+                <td>$${parseFloat(item.precio).toFixed(2)}</td>
+                <td><button class="delete-btn" data-index="${index}">X</button></td>
+            `;
+            batchItemsContainer.appendChild(row);
+        });
+    }
+
+    // Listener para borrar items de la lista
+    batchItemsContainer.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-btn')) {
+            const index = event.target.dataset.index;
+            loteActual.splice(index, 1);
+            actualizarVistaLote();
+        }
+    });
+});
+</script>
+{% endblock %}
