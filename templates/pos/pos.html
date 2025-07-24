@@ -4,10 +4,47 @@
 {% block content %}
     {% csrf_token %}
     <div class="top-bar">
-        ...
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <label for="barcode-input">Código de Barras:</label>
+                <input type="text" id="barcode-input" placeholder="Escanee o ingrese el código de barras" autofocus>
+            </div>
+            <div>
+                <a href="{% url 'registrar_productos' %}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">📦 Registrar Productos</a>
+            </div>
+        </div>
     </div>
+    
     <div class="main-container">
-        ...
+        <div class="sale-container">
+            <h2>Productos en Venta</h2>
+            <table id="sale-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Subtotal</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="sale-items">
+                    <!-- Los productos se agregarán dinámicamente aquí -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="summary-container">
+            <h3>Resumen de Venta</h3>
+            <div class="summary-total">
+                <h2 id="total-display">$0.00</h2>
+            </div>
+            
+            <div class="actions-container">
+                <button class="cancel-button">Cancelar</button>
+                <button class="finalize-button">Finalizar Venta</button>
+            </div>
+        </div>
     </div>
 {% endblock %}
 

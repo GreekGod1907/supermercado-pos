@@ -3,11 +3,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Supermercado POS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Supermercado POS{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-{% block content %}{% endblock %}
-{% block scripts %}{% endblock %}
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    {% block scripts %}
+    {% endblock %}
 </body>
 </html>

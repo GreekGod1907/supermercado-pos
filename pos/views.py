@@ -3,7 +3,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-from .models import Producto, Venta, DetalleVenta, Inventario # <-- Asegúrate de importar Inventario
+from .models import Producto, Venta, DetalleVenta, Inventario
 from django.contrib.auth.decorators import login_required
 
 def pos_view(request):
@@ -13,7 +13,7 @@ def pos_view(request):
 def registrar_productos_view(request):
     return render(request, 'pos/registrar_productos.html')
 
-# VISTA DE API ACTUALIZADA para buscar productos
+# VISTA DE API para buscar productos
 def buscar_producto_api(request):
     codigo_barras = request.GET.get('codigo_barra', None)
     if not codigo_barras:
@@ -28,14 +28,14 @@ def buscar_producto_api(request):
 
         data = {
             'nombre': producto.nombre,
-            'precio': str(inventario_item.precio_venta) # <-- Obtenemos el precio del Inventario
+            'precio': str(inventario_item.precio_venta)
         }
         return JsonResponse(data)
     except Inventario.DoesNotExist:
         return JsonResponse({'error': 'Producto no encontrado en el inventario'}, status=404)
 
 
-# VISTA DE API ACTUALIZADA para finalizar la venta y descontar stock
+# VISTA DE API para finalizar la venta y descontar stock
 @csrf_exempt
 @transaction.atomic
 def finalizar_venta_api(request):
@@ -58,12 +58,10 @@ def finalizar_venta_api(request):
                 try:
                     inventario = Inventario.objects.get(producto=producto)
                 except Inventario.DoesNotExist:
-                    # Esto no debería pasar si buscar_producto_api funcionó, pero es una buena validación
                     return JsonResponse({'error': f'Inventario no encontrado para {producto.nombre}'}, status=400)
 
                 # Verificamos si hay stock suficiente
                 if inventario.cantidad < item['cantidad']:
-                    # Si no hay stock, la transacción completa se revierte gracias a @transaction.atomic
                     return JsonResponse({'error': f'Stock insuficiente para {producto.nombre}'}, status=400)
                 
                 # Descontamos el stock
@@ -86,7 +84,7 @@ def finalizar_venta_api(request):
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-#VISTA RECIBO
+# VISTA RECIBO
 def recibo_venta_view(request, venta_id):
     try:
         venta = Venta.objects.get(id=venta_id)
@@ -98,27 +96,48 @@ def recibo_venta_view(request, venta_id):
         return render(request, 'pos/recibo.html', contexto)
     except Venta.DoesNotExist:
         return JsonResponse({'error': 'Venta no encontrada'}, status=404)
-    
+
+# VISTA DE API CORREGIDA para registrar lote - SUMA al inventario existente
 @csrf_exempt
 @transaction.atomic
 def registrar_lote_api(request):
     if request.method == 'POST':
         try:
             lote = json.loads(request.body)
+            productos_procesados = 0
+            
             for item in lote:
+                # 1. Crear o actualizar el producto
                 producto, created = Producto.objects.update_or_create(
                     codigo_barra=item['codigo_barra'],
                     defaults={'nombre': item['nombre']}
                 )
 
-                inventario, inv_created = Inventario.objects.update_or_create(
-                    producto=producto,
-                    defaults={
-                        'cantidad': int(item['cantidad']),
-                        'precio_venta': float(item['precio'])
-                    }
-                )
-            return JsonResponse({'success': True, 'productos_procesados': len(lote)})
+                # 2. Manejar el inventario - SUMAR en lugar de reemplazar
+                try:
+                    # Si ya existe el inventario, lo obtenemos y sumamos
+                    inventario = Inventario.objects.get(producto=producto)
+                    inventario.cantidad += int(item['cantidad'])  # SUMA la cantidad
+                    inventario.precio_venta = float(item['precio'])  # Actualiza el precio
+                    inventario.save()
+                    
+                except Inventario.DoesNotExist:
+                    # Si no existe, lo creamos nuevo
+                    inventario = Inventario.objects.create(
+                        producto=producto,
+                        cantidad=int(item['cantidad']),
+                        precio_venta=float(item['precio'])
+                    )
+                
+                productos_procesados += 1
+            
+            return JsonResponse({
+                'success': True, 
+                'productos_procesados': productos_procesados,
+                'message': f'Se han procesado {productos_procesados} productos. Las cantidades se sumaron al inventario existente.'
+            })
+            
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+    
     return JsonResponse({'error': 'Método no permitido'}, status=405)
