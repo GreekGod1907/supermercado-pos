@@ -4,16 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Supermercado POS{% endblock %}</title>
+    <title>{% block title %}SuperPOS Pro - Sistema Punto de Venta{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    
+    <!-- Fuentes modernas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Principal -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- CSS adicional por página -->
     {% block extra_css %}{% endblock %}
+    
+    <!-- Meta tags para mejor SEO y compartir -->
+    <meta name="description" content="Sistema de Punto de Venta moderno y eficiente">
+    <meta name="theme-color" content="#5B4FF0">
 </head>
 <body>
-    <main>
+    <!-- Contenido principal -->
+    <main class="main-wrapper">
         {% block content %}
         {% endblock %}
     </main>
     
+    <!-- Scripts globales -->
+    <script>
+        // Configuración global
+        window.POS_CONFIG = {
+            csrfToken: '{{ csrf_token }}',
+            urls: {
+                buscarProducto: "{% url 'buscar_producto_api' %}",
+                finalizarVenta: "{% url 'finalizar_venta_api' %}",
+                registrarLote: "{% url 'registrar_lote_api' %}"
+            }
+        };
+    </script>
+    
+    <!-- Scripts específicos de cada página -->
     {% block scripts %}
     {% endblock %}
 </body>

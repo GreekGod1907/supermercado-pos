@@ -4,55 +4,272 @@
     <meta charset="UTF-8">
     <title>Recibo Venta #{{ venta.id }}</title>
     <style>
+        /* Reset y configuración base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Courier New', Courier, monospace;
             width: 280px; /* Ancho típico para recibos de 80mm */
+            margin: 0 auto;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+        }
+        
+        /* Estilos para impresión */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        
+        /* Header del recibo */
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #000;
+        }
+        
+        .store-logo {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .store-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .store-info {
+            font-size: 10px;
+            color: #666;
+        }
+        
+        /* Información de la venta */
+        .sale-info {
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        
+        .sale-info div {
+            margin-bottom: 3px;
+        }
+        
+        /* Tabla de productos */
+        .products-table {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .products-table th {
+            text-align: left;
+            border-bottom: 1px solid #000;
+            padding: 5px 0;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .products-table td {
+            padding: 4px 0;
+            font-size: 11px;
+            vertical-align: top;
+        }
+        
+        .product-name {
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        
+        .product-details {
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        /* Totales */
+        .totals-section {
+            border-top: 2px dashed #000;
+            padding-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
             font-size: 12px;
         }
-        h2, p {
-            text-align: center;
-            margin: 5px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 3px;
-        }
-        .total {
+        
+        .total-final {
+            font-size: 16px;
             font-weight: bold;
-            border-top: 1px dashed black;
+            margin-top: 5px;
             padding-top: 5px;
+            border-top: 1px solid #000;
+        }
+        
+        /* Footer */
+        .receipt-footer {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px dashed #000;
+        }
+        
+        .barcode {
+            font-family: 'Libre Barcode 39', cursive;
+            font-size: 32px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        /* Botón de impresión */
+        .print-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            background: #5B4FF0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+        
+        .print-button:hover {
+            background: #4339D0;
         }
     </style>
+    
+    <!-- Fuente para código de barras (opcional) -->
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
 </head>
-<body onload="window.print();">
-    <h2>SUPERMERCADO</h2>
-    <p>Venta #{{ venta.id }}</p>
-    <p>{{ venta.fecha_venta|date:"d/m/Y H:i:s" }}</p>
-    <hr>
-    <table>
+<body>
+    <!-- Header del recibo -->
+    <div class="receipt-header">
+        <div class="store-logo">🛒</div>
+        <div class="store-name">SUPERPOS PRO</div>
+        <div class="store-info">
+            Tu supermercado de confianza<br>
+            NIT: 900.123.456-7<br>
+            Tel: (601) 123-4567
+        </div>
+    </div>
+    
+    <!-- Información de la venta -->
+    <div class="sale-info">
+        <div><strong>VENTA #{{ venta.id|stringformat:"06d" }}</strong></div>
+        <div>Fecha: {{ venta.fecha_venta|date:"d/m/Y" }}</div>
+        <div>Hora: {{ venta.fecha_venta|date:"H:i:s" }}</div>
+        <div>Cajero: CAJA-01</div>
+    </div>
+    
+    <!-- Productos -->
+    <table class="products-table">
         <thead>
             <tr>
-                <th>Cant.</th>
-                <th>Producto</th>
-                <th>Subtotal</th>
+                <th style="width: 60%">Producto</th>
+                <th class="text-center" style="width: 15%">Cant</th>
+                <th class="text-right" style="width: 25%">Total</th>
             </tr>
         </thead>
         <tbody>
             {% for item in detalles %}
             <tr>
-                <td>{{ item.cantidad }}</td>
-                <td>{{ item.producto.nombre }}</td>
-                <td>${{ item.precio_unitario|floatformat:2 }}</td>
+                <td>
+                    <div class="product-name">{{ item.producto.nombre }}</div>
+                    <div class="product-details">
+                        ${{ item.precio_unitario|floatformat:0 }} c/u
+                    </div>
+                </td>
+                <td class="text-center">{{ item.cantidad }}</td>
+                <td class="text-right">
+                    ${{ item.precio_unitario|floatformat:0 }}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <hr>
-    <p class="total">TOTAL: ${{ venta.total|floatformat:2 }}</p>
-    <br>
-    <p>¡Gracias por su compra!</p>
+    
+    <!-- Totales -->
+    <div class="totals-section">
+        <div class="total-row">
+            <span>Subtotal:</span>
+            <span>${{ venta.total|floatformat:0 }}</span>
+        </div>
+        <div class="total-row">
+            <span>Descuento:</span>
+            <span>$0</span>
+        </div>
+        <div class="total-row">
+            <span>IVA (19%):</span>
+            <span>Incluido</span>
+        </div>
+        <div class="total-row total-final">
+            <span>TOTAL:</span>
+            <span>${{ venta.total|floatformat:0 }}</span>
+        </div>
+    </div>
+    
+    <!-- Código de barras (opcional) -->
+    <div class="barcode">
+        *{{ venta.id|stringformat:"06d" }}*
+    </div>
+    
+    <!-- Footer -->
+    <div class="receipt-footer">
+        <p><strong>¡GRACIAS POR SU COMPRA!</strong></p>
+        <p>Conserve este recibo para cualquier reclamo</p>
+        <p>Válido por 30 días</p>
+        <br>
+        <p style="font-size: 9px;">
+            Software POS by SuperPOS Pro<br>
+            www.superpos.com
+        </p>
+    </div>
+    
+    <!-- Botón de impresión (no se imprime) -->
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ Imprimir Recibo
+    </button>
+    
+    <script>
+        // Auto-imprimir al cargar (opcional - puedes comentar si no quieres)
+        window.onload = function() {
+            // Esperar un momento para que se cargue todo
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+        
+        // Cerrar ventana después de imprimir (opcional)
+        window.onafterprint = function() {
+            // Preguntar si quiere cerrar la ventana
+            if (confirm('¿Desea cerrar esta ventana?')) {
+                window.close();
+            }
+        };
+    </script>
 </body>
 </html>

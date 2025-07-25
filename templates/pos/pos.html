@@ -4,45 +4,76 @@
 {% block content %}
     {% csrf_token %}
     <div class="top-bar">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <label for="barcode-input">Código de Barras:</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <label for="barcode-input">🔍 Código de Barras:</label>
                 <input type="text" id="barcode-input" placeholder="Escanee o ingrese el código de barras" autofocus>
             </div>
             <div>
-                <a href="{% url 'registrar_productos' %}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">📦 Registrar Productos</a>
+                <a href="{% url 'registrar_productos' %}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; white-space: nowrap;">📦 Registrar Productos</a>
             </div>
         </div>
     </div>
     
     <div class="main-container">
         <div class="sale-container">
-            <h2>Productos en Venta</h2>
+            <h2>🛒 Productos en Venta</h2>
             <table id="sale-table">
                 <thead>
                     <tr>
                         <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unit.</th>
+                        <th>Cant.</th>
+                        <th class="mobile-hide">Precio Unit.</th>
                         <th>Subtotal</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody id="sale-items">
-                    <!-- Los productos se agregarán dinámicamente aquí -->
+                    <!-- Estado vacío inicial -->
+                    <tr>
+                        <td colspan="5" class="empty-cart">
+                            <div class="empty-cart-icon">🛒</div>
+                            <div>No hay productos en la venta</div>
+                            <div style="font-size: 0.9em; opacity: 0.7; margin-top: 0.5em;">
+                                Escanea o ingresa un código de barras para comenzar
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
         
         <div class="summary-container">
-            <h3>Resumen de Venta</h3>
+            <h3>💰 Resumen de Venta</h3>
+            
+            <!-- Información adicional del resumen -->
+            <div style="margin: 1em 0; padding: 1em; background-color: #f8f9fa; border-radius: 5px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5em;">
+                    <span>Total a Pagar</span>
+                    <span id="total-display-summary">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5em;">
+                    <span>Subtotal</span>
+                    <span id="subtotal-display">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5em;">
+                    <span>Productos</span>
+                    <span id="items-count">0 items</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Descuento</span>
+                    <span>$0.00</span>
+                </div>
+            </div>
+            
             <div class="summary-total">
+                <div style="text-align: center; margin-bottom: 0.5em; font-weight: bold;">Total Final</div>
                 <h2 id="total-display">$0.00</h2>
             </div>
             
             <div class="actions-container">
-                <button class="cancel-button">Cancelar</button>
-                <button class="finalize-button">Finalizar Venta</button>
+                <button class="cancel-button">❌ Cancelar</button>
+                <button class="finalize-button">✅ Finalizar Venta</button>
             </div>
         </div>
     </div>
